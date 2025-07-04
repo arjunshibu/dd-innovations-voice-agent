@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model VoiceRecording {
+  id        Int      @id @default(autoincrement())
+  filename  String   @unique // Sequential naming reference
+  duration  String   // Format: "1:23"
+  timestamp DateTime @default(now())
+  language  String   // Detected language
+  transcript String  // Speech-to-text output
+  audioUrl  String   // Path to saved audio file
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to alerts
+  alerts Alert[]
+}
+
+model Alert {
+  id          Int      @id @default(autoincrement())
+  recordingId Int
+  title       String   // Auto-generated title
+  transcript  String   // Copy of transcript for easy access
+  department  String   // Classified department
+  urgency     String   // High Priority, Medium Priority, General Task
+  isResolved  Boolean  @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?  // Department that resolved it
+  isFalseAlarm Boolean @default(false)
+  isLatest    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation to voice recording
+  recording VoiceRecording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+} 
