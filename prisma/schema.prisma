@@ -37,6 +37,7 @@ model Alert {
   resolvedBy  String?  // Department that resolved it
   isFalseAlarm Boolean @default(false)
   isLatest    Boolean  @default(false)
+  AITranslation_Logic Json? // Stores translation summary from GPT
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

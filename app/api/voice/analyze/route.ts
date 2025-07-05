@@ -41,6 +41,13 @@ export async function POST(request: NextRequest) {
       provider as "gpt" | "gemini"
     );
 
+    // If department or urgency is 'Unclear', set language to 'Unclear'
+    const finalLanguage =
+      classification.department === "Unclear" ||
+      classification.urgency === "Unclear"
+        ? "Unclear"
+        : language;
+
     // Calculate duration (you might want to get this from the audio metadata)
     const duration = "0:30"; // This should be calculated from actual audio duration
 
@@ -49,7 +56,7 @@ export async function POST(request: NextRequest) {
       data: {
         filename,
         duration,
-        language,
+        language: finalLanguage,
         transcript,
         audioUrl: `/recordings/${filename}`,
       },
@@ -65,6 +72,7 @@ export async function POST(request: NextRequest) {
         urgency: classification.urgency,
         isFalseAlarm: classification.isFalseAlarm,
         isLatest: true,
+        AITranslation_Logic: classification.AITranslation_Logic || null,
       },
     });
 

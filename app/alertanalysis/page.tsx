@@ -93,6 +93,11 @@ interface Recording {
   audioUrl?: string
   department?: string
   transcript?: string
+  AITranslation_Logic?: {
+    translatedReport: string;
+    followUpQuestions: string[];
+    routingExplanation: string;
+  };
 }
 
 // Waveform component
@@ -125,6 +130,22 @@ function Waveform({ isRecording }: { isRecording: boolean }) {
       ))}
     </div>
   )
+}
+
+function formatToIST(dateString: string) {
+  const date = new Date(dateString);
+  // Convert to IST (UTC+5:30)
+  const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+  // Format: 05 July 2024, 03:35 PM
+  return istDate.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata'
+  }).replace(',', '').replace(/(\d{2}):(\d{2}) ([AP]M)/, (m, h, min, ampm) => `${h}:${min} ${ampm}`);
 }
 
 export default function AlertAnalysisPage() {
@@ -162,6 +183,7 @@ export default function AlertAnalysisPage() {
         audioUrl: alert.recording.audioUrl,
         department: alert.department,
         transcript: alert.transcript,
+        AITranslation_Logic: alert.AITranslation_Logic,
       }))
       
       setRecordings(recordingsData)
@@ -444,7 +466,7 @@ export default function AlertAnalysisPage() {
                                 : `Recording ${recording.id}`
                               }
                             </p>
-                            <p className="text-sm text-gray-600 truncate">{recording.timestamp}</p>
+                            <p className="text-sm text-gray-600 truncate">{formatToIST(recording.timestamp)}</p>
                           </div>
                         </div>
                         <Badge variant="secondary" className="bg-primary/10 text-primary self-start md:self-center">

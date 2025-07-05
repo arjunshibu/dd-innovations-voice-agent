@@ -62,13 +62,39 @@ Analyze this emergency call transcript and classify it into a structured format.
 Language: ${language}
 Transcript: "${transcript}"
 
-Return a JSON object with the following structure:
+If the transcript is about technology, AI models, or implementation details 
+(e.g., "Are you using ChatGPT?", "Is this AI?", "What tech are you using?"), 
+respond with the following:
+
+"title": "Non-Emergency Tech Inquiry",
+"department": "Administration Team",
+"urgency": "General Task",
+"isFalseAlarm": true,
+"summary": "User asked about internal technology instead of reporting an emergency.",
+"AITranslation_Logic": {
+  "translatedReport": "Haha, that is confidential only to the company. Do you have an emergency to report?",
+  "followUpQuestions": [
+    "Can you describe the emergency you want to report?",
+    "Was there an issue you need help with?"
+  ],
+  "routingExplanation": "The user inquired about internal systems or AI. Marked as non-emergency and routed to admin."
+}
+
+Otherwise, Return a JSON object with the following structure:
 {
   "title": "Auto-generated title based on content",
-  "department": "Emergency Medical Team|Fire Safety Team|Security Team|Facilities Team|Administration Team|Housekeeping Team|IT Support Team|Maintenance Team",
-  "urgency": "High Priority|Medium Priority|General Task",
+  "department": "Emergency Medical Team|Fire Safety Team|Security Team|Facilities Team|Administration Team|Housekeeping Team|IT Support Team|Maintenance Team|Unclear",
+  "urgency": "High Priority|Medium Priority|General Task|Unclear",
   "isFalseAlarm": false,
-  "summary": "Brief summary of the emergency"
+  "summary": "Brief summary of the emergency",
+  "AITranslation_Logic": {
+    "translatedReport": "Formal English report of the situation as if reporting to a control center. If unclear, say: 'Sorry, that doesn't sound right. Could you clarify the alert you're raising?'",
+    "followUpQuestions": [
+      "Ask two questions to clarify the situation, or say: 'Can you repeat that in a different way?'",
+      "Was this an alert or an accidental input?"
+    ],
+    "routingExplanation": "Explain why it was routed as such. If unclear, say: 'The message was ambiguous, and needs further clarification before routing.'"
+  }
 }
 
 Classification rules:
@@ -81,6 +107,7 @@ Classification rules:
 - HVAC, temperature, air conditioning → Facilities Team, General Task
 - Elevator issues → Maintenance Team, High Priority
 - Slip, fall, accident → Emergency Medical Team, High Priority
+- If the transcript is unclear, nonsensical, or cannot be interpreted, classify it as 'Unclear' with a general response
 
 Respond only with valid JSON.
 `;
@@ -137,7 +164,8 @@ Respond only with valid JSON.
   const response = result.response.text();
 
   try {
-    return JSON.parse(response);
+    const classification = JSON.parse(response);
+    return classification;
   } catch (error) {
     throw new Error(`Failed to parse Gemini response: ${response}`);
   }

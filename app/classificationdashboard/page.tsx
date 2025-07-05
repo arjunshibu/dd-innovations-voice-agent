@@ -43,6 +43,11 @@ interface Alert {
     language: string
     audioUrl: string
   }
+  AITranslation_Logic?: {
+    translatedReport: string;
+    followUpQuestions: string[];
+    routingExplanation: string;
+  };
 }
 
 // Dummy notifications data
@@ -313,9 +318,10 @@ const departments = [
   "Housekeeping Team",
   "IT Support Team",
   "Maintenance Team",
+  "Unclear",
 ]
 
-const urgencyLevels = ["High Priority", "Medium Priority", "General Task"]
+const urgencyLevels = ["High Priority", "Medium Priority", "General Task", "Unclear"]
 
 // Audio playback waveform component
 function PlaybackWaveform({ isPlaying }: { isPlaying: boolean }) {
@@ -382,6 +388,22 @@ function getCardBorderColor(urgency: string, isFalseAlarm: boolean, isResolved: 
     default:
       return "border-t-4 border-t-green-500"
   }
+}
+
+function formatToIST(dateString: string) {
+  const date = new Date(dateString);
+  // Convert to IST (UTC+5:30)
+  const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+  // Format: 05 July 2024, 03:35 PM
+  return istDate.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata'
+  }).replace(',', '').replace(/(\d{2}):(\d{2}) ([AP]M)/, (m, h, min, ampm) => `${h}:${min} ${ampm}`);
 }
 
 export default function ClassificationDashboard() {
@@ -727,9 +749,9 @@ export default function ClassificationDashboard() {
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 text-sm text-gray-600">
-                  <span>{recording.recording.timestamp}</span>
+                  <span>{formatToIST(recording.recording.timestamp)}</span>
                   <Badge variant="secondary" className="bg-primary/10 text-primary self-start">
-                    {recording.recording.language}
+                    {recording.recording.language === 'Unclear' ? 'Unclear' : recording.recording.language}
                   </Badge>
                 </div>
               </CardHeader>
@@ -770,6 +792,28 @@ export default function ClassificationDashboard() {
                     {recording.transcript}
                   </p>
                 </div>
+                {/* Translation Summary */}
+                {recording.AITranslation_Logic && (
+                  <div className="mt-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Translation Summary:</h4>
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm md:text-base">
+                      <div>
+                        <strong>Translated Report:</strong> {recording.AITranslation_Logic.translatedReport}
+                      </div>
+                      <div className="mt-2">
+                        <strong>Follow-up Questions:</strong>
+                        <ul className="list-disc ml-6">
+                          {recording.AITranslation_Logic.followUpQuestions.map((q, idx) => (
+                            <li key={idx}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="mt-2">
+                        <strong>Routing Explanation:</strong> {recording.AITranslation_Logic.routingExplanation}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Department and Urgency Controls */}
                 <div className="grid md:grid-cols-2 gap-4">
